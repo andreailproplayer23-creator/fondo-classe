@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Fondo Classe</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+
+    <div class="dashboard-wrapper">
+        <!-- Header -->
+        <header class="glass-card header-card">
+            <div class="user-info">
+                <div class="avatar" id="user-avatar">👤</div>
+                <div>
+                    <h2>Ciao, <span id="user-name">Caricamento...</span> 👋</h2>
+                    <p id="user-role" class="role-badge">Verifica...</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="open-admin-pin-btn" class="glass-btn btn-warning" style="display: none; width: auto; font-size: 13px;">🔑 Pannello Admin</button>
+                <button id="logout-btn" class="glass-btn btn-danger">Esci</button>
+            </div>
+        </header>
+
+        <!-- SEZIONE GESTIONE ADMIN (Protetto da PIN) -->
+        <div id="admin-management-card" class="glass-card admin-panel-card" style="display: none;">
+            <div class="list-header">
+                <div>
+                    <h3 style="color: #ffd700;">👑 Gestione Amministratori & Permessi</h3>
+                    <p class="trans-meta">Gestisci gli utenti abilitati a modificare le finanze e la classe</p>
+                </div>
+                <button id="close-admin-panel-btn" class="close-btn">&times;</button>
+            </div>
+
+            <form id="add-admin-form" class="inline-form" style="margin-top: 15px; max-width: 100%;">
+                <input type="email" id="admin-email-input" placeholder="Email nuovo Admin (es. compagno@gmail.com)" required class="search-field" style="flex: 1;">
+                <button type="submit" class="glass-btn primary-btn" style="width: auto;">+ Nomina Admin</button>
+            </form>
+            
+            <ul id="admins-list" class="students-list-grid" style="margin-top: 15px;">
+                <!-- Caricamento Admin -->
+            </ul>
+        </div>
+
+        <!-- Griglia Statistiche -->
+        <div class="stats-grid">
+            <div class="glass-card stat-card main-stat">
+                <span class="stat-label">Saldo Totale Attuale</span>
+                <h1 id="total-balance">€ 0,00</h1>
+                
+                <div id="admin-actions" class="action-buttons" style="display: none;">
+                    <button id="open-income-modal" class="glass-btn btn-success">+ Aggiungi Quota Singola</button>
+                    <button id="open-expense-modal" class="glass-btn btn-warning">- Registra Spesa</button>
+                </div>
+            </div>
+
+            <div class="glass-card stat-card">
+                <span class="stat-label">Totale Entrate</span>
+                <h3 id="total-income" class="text-success">€ 0,00</h3>
+            </div>
+
+            <div class="glass-card stat-card">
+                <span class="stat-label">Totale Uscite</span>
+                <h3 id="total-expense" class="text-danger">€ 0,00</h3>
+            </div>
+        </div>
+
+        <!-- SEZIONE BACHECA AVVISI E COMUNICAZIONI -->
+        <div class="glass-card">
+            <div class="list-header">
+                <h3>📢 Bacheca Comunicazioni Classe</h3>
+                <button id="open-notice-modal-btn" class="glass-btn primary-btn admin-only-btn" style="width: auto; display: none;">+ Nuova Comunicazione</button>
+            </div>
+            <ul id="notices-list" class="notices-list">
+                <li class="empty-state">Nessuna comunicazione presente.</li>
+            </ul>
+        </div>
+
+        <!-- SEZIONE RACCOLTE QUOTE CLASSE -->
+        <div class="glass-card">
+            <div class="list-header">
+                <h3>🎯 Raccolte Quote Classe</h3>
+                <button id="open-collection-modal" class="glass-btn primary-btn admin-only-btn" style="width: auto; display: none;">+ Nuova Raccolta</button>
+            </div>
+            <div id="collections-container" class="collections-grid">
+                <p class="empty-state">Nessuna raccolta attiva al momento.</p>
+            </div>
+        </div>
+
+        <!-- SEZIONE ELENCO STUDENTI CLASSE -->
+        <div class="glass-card">
+            <div class="list-header">
+                <h3>👥 Elenco Studenti Classe (<span id="students-count">0</span>)</h3>
+                <form id="add-student-form" class="admin-only-flex inline-form" style="display: none;">
+                    <input type="text" id="student-name-input" placeholder="Nome Studente (es. Marco Rossi)" required class="search-field">
+                    <button type="submit" class="glass-btn btn-success" style="width: auto;">Aggiungi</button>
+                </form>
+            </div>
+            <ul id="students-list" class="students-list-grid">
+                <li class="empty-state">Nessun studente inserito.</li>
+            </ul>
+        </div>
+
+        <!-- Sezione Movimenti Cassa Generale + Filtri Avanzati & Export PDF -->
+        <div class="glass-card transactions-card">
+            <div class="list-header">
+                <h3>📜 Movimenti Cassa Generale</h3>
+                <button id="export-pdf-btn" class="glass-btn btn-pdf" style="width: auto;">📄 Scarica Report PDF</button>
+            </div>
+
+            <!-- Filtri Avanzati -->
+            <div class="filters-bar">
+                <input type="text" id="search-input" placeholder="🔍 Cerca movimento..." class="search-field">
+                
+                <select id="filter-category" class="filter-select">
+                    <option value="ALL">Tutte le Categorie</option>
+                    <option value="Gita">🚌 Gita / Uscita</option>
+                    <option value="Materiale">📚 Materiale Scolastico</option>
+                    <option value="Festa">🎉 Festa / Evento</option>
+                    <option value="Quota Iniziale">💰 Quota Iniziale</option>
+                    <option value="Altro">📌 Altro</option>
+                </select>
+
+                <select id="filter-type" class="filter-select">
+                    <option value="ALL">Tutti i Tipi</option>
+                    <option value="income">📈 Solo Entrate (+)</option>
+                    <option value="expense">📉 Solo Uscite (-)</option>
+                </select>
+            </div>
+            
+            <ul id="transactions-list" class="transactions-list">
+                <li class="empty-state">Caricamento movimenti...</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modale Inserimento PIN Admin -->
+    <div id="admin-pin-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content fade-in" style="max-width: 340px; text-align: center;">
+            <div class="modal-header">
+                <h3>🔒 Accesso Riservato Admin</h3>
+                <button id="close-pin-modal" class="close-btn">&times;</button>
+            </div>
+            <p class="trans-meta" style="margin-bottom: 15px;">Inserisci il PIN per aprire il pannello di controllo:</p>
+            <form id="pin-form">
+                <div class="input-group">
+                    <input type="password" id="admin-pin-input" maxlength="8" placeholder="Inserisci PIN" style="text-align: center; font-size: 20px; letter-spacing: 4px;" required>
+                </div>
+                <button type="submit" class="glass-btn primary-btn" style="margin-top: 10px;">Sblocca Pannello</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale Nuova Comunicazione -->
+    <div id="notice-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content fade-in">
+            <div class="modal-header">
+                <h3>📢 Pubblica Nuova Comunicazione</h3>
+                <button id="close-notice-modal" class="close-btn">&times;</button>
+            </div>
+            <form id="add-notice-form">
+                <div class="input-group">
+                    <label>Titolo Comunicazione</label>
+                    <input type="text" id="notice-title-input" placeholder="Es. Pagamento Gita Entro Venerdì" required>
+                </div>
+                <div class="input-group">
+                    <label>Descrizione / Dettagli</label>
+                    <textarea id="notice-desc-input" rows="3" placeholder="Scrivi i dettagli dell'avviso per la classe..." required class="search-field" style="width: 100%; border-radius: 12px; resize: vertical;"></textarea>
+                </div>
+                <button type="submit" class="glass-btn primary-btn" style="margin-top: 15px;">Pubblica Avviso</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale Transazione Singola -->
+    <div id="transaction-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content fade-in">
+            <div class="modal-header">
+                <h3 id="modal-title">Nuova Transazione</h3>
+                <button id="close-modal" class="close-btn">&times;</button>
+            </div>
+            
+            <form id="transaction-form">
+                <input type="hidden" id="trans-type" value="income">
+                
+                <div class="input-group">
+                    <label>Descrizione</label>
+                    <input type="text" id="trans-desc" placeholder="Es. Quota Individuale / Compra Fogli" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Importo (€)</label>
+                    <input type="number" step="0.01" id="trans-amount" placeholder="0.00" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Categoria</label>
+                    <select id="trans-category" required>
+                        <option value="Gita">🚌 Gita / Uscita</option>
+                        <option value="Materiale">📚 Materiale Scolastico</option>
+                        <option value="Festa">🎉 Festa / Evento</option>
+                        <option value="Quota Iniziale">💰 Quota Iniziale</option>
+                        <option value="Altro">📌 Altro</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="glass-btn primary-btn" style="margin-top: 15px;">Salva Transazione</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale Nuova Raccolta Quote -->
+    <div id="collection-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content fade-in">
+            <div class="modal-header">
+                <h3>Avvia Nuova Raccolta per la Classe 📣</h3>
+                <button id="close-collection-modal" class="close-btn">&times;</button>
+            </div>
+            
+            <form id="collection-form">
+                <div class="input-group">
+                    <label>Titolo Raccolta</label>
+                    <input type="text" id="coll-title" placeholder="Es. Gita a Roma / Biglietti Cinema" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Quota a Studente (€)</label>
+                    <input type="number" step="0.01" id="coll-amount" placeholder="Es. 10.00" required>
+                </div>
+
+                <button type="submit" class="glass-btn primary-btn" style="margin-top: 15px;">Avvia Raccolta per Tutti</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="dashboard.js"></script>
+</body>
+</html>
